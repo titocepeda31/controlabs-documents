@@ -164,7 +164,7 @@ body.menu-open{overflow:hidden}body.menu-open .sidebar{transform:translateX(0);p
 </head>
 <body>
 <header class="topbar"><div class="topinner">
-  <button class="menu-toggle" type="button" data-action="toggle-menu" aria-label="Abrir menú principal" aria-controls="appMenu" aria-expanded="false"><span class="menu-lines" aria-hidden="true">☰</span></button>
+  <button id="menuToggle" class="menu-toggle" type="button" data-action="toggle-menu" aria-label="Abrir menú principal" aria-controls="appMenu" aria-expanded="false"><span class="menu-lines" aria-hidden="true">☰</span></button>
   <div class="brand"><div class="mark">≋</div><div><div class="brandline">Controlabs <span class="tag">DEMO</span></div><div class="brandsub">Gestión de ensayos e informes</div></div></div>
   <div class="header-status"><span class="current-view" id="viewLabel">Órdenes de trabajo</span><span class="save-state" id="saveLabel">Guardado en este dispositivo</span></div>
 </div></header>
@@ -419,7 +419,41 @@ function renderPreview(onlyId=selectedTestId){
  const pages=buildPages(t?.id||'');$('paperStack').innerHTML=pages.length?pages.join(''):'<div class="empty">Agrega un ensayo para comenzar.</div>';
  $('pageNote').textContent=pages.length+' página(s) A4 · '+(t?.title||'Sin ensayos')+' · Documento de demostración';requestAnimationFrame(fitPaper);
 }
-function navigate(tab){activeTab=tab;document.querySelectorAll('[data-nav].tab').forEach(x=>x.classList.toggle('active',x.dataset.nav===tab));for(const p of ['gestion','orden','ensayos','documento','validacion','entrega','servidor'])$('panel-'+p).classList.toggle('hidden',p!==tab);if(tab==='gestion')renderManagement();if(tab==='orden')renderOrder();if(tab==='ensayos')renderTests();if(tab==='documento')renderPreview();if(tab==='validacion')renderValidation();if(tab==='entrega')renderDelivery();if(tab==='servidor'){renderServer();if(!server.checked)refreshSession()}window.scrollTo({top:0,behavior:'smooth'})}
+
+const VIEWS={gestion:'Órdenes de trabajo',ensayos:'Registro de densidad',documento:'Vista del informe',validacion:'Validación',entrega:'Emisión y PDF',orden:'Datos de la OT'};
+function toggleDrawer(open){
+ document.body.classList.toggle('menu-open',!!open);
+ $('menuBackdrop').hidden=!open;
+ $('menuToggle')?.setAttribute('aria-expanded',open?'true':'false');
+}
+function renderOrderContext(){
+ const o=activeOrder();
+ const items=db.orders.map(x=>'<option value="'+enc(x.id)+'" '+(x.id===o.id?'selected':'')+'>'+enc(x.ot||'OT sin número')+' · '+enc(x.workName||x.clientName||'Por completar')+'</option>').join('');
+ for(const id of ['labOrderContext','reportOrderContext','deliveryOrderContext']){
+  const target=$(id);if(!target)continue;
+  target.innerHTML='<div class="order-context"><div><span class="order-context-label">Orden de trabajo activa</span><select data-order-switch="1" aria-label="Seleccionar orden de trabajo">'+items+'</select></div><span class="order-context-work">'+enc(o.clientName||'Empresa pendiente')+' · '+enc(o.workName||'Obra pendiente')+'</span></div>';
+ }
+}
+
+function navigate(tab){
+ activeTab=tab;
+ toggleDrawer(false);
+ document.querySelectorAll('.role-menu [data-nav]').forEach(x=>{
+  const on=x.dataset.nav===tab;x.classList.toggle('selected',on);
+  if(on)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current');
+ });
+ $('viewLabel').textContent=VIEWS[tab]||'Controlabs Documents';
+ for(const p of ['gestion','orden','ensayos','documento','validacion','entrega','servidor'])$('panel-'+p).classList.toggle('hidden',p!==tab);
+ renderOrderContext();
+ if(tab==='gestion')renderManagement();
+ if(tab==='orden')renderOrder();
+ if(tab==='ensayos')renderTests();
+ if(tab==='documento')renderPreview();
+ if(tab==='validacion')renderValidation();
+ if(tab==='entrega')renderDelivery();
+ if(tab==='servidor'){renderServer();if(!server.checked)refreshSession()}
+ window.scrollTo({top:0,behavior:'smooth'});
+}
 function renderAll(){renderOrders();updateStats();navigate(activeTab)}
 function exportJson(){const s=JSON.stringify(db,null,2);const blob=new Blob([s],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='respaldo_ordenes_laboratorio.json';document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);toast('Respaldo JSON descargado. Guárdalo en un lugar seguro.')}
 function printReport(single=true){const t=activeTest();if(!t||t.status!=='firmado'){toast('Primero valida y registra la firma simulada del informe.');return}printedSingle=t.id;beforePrintTab=activeTab;$('panel-documento').classList.remove('hidden');renderPreview(printedSingle);window.print()}
@@ -449,8 +483,10 @@ async function refreshRemote(){try{const r=await api('orders');server.orders=r.o
 async function saveRemote(){if(!server.authenticated){serverMessage('Inicia sesión para guardar en el hosting.');return}const o=activeOrder();if(!o.ot.trim()){serverMessage('Indica el número de OT antes de guardar en el servidor.');return}try{const r=await api('save',(server.revisions[o.id]||0)>0?'PUT':'POST',{order:o,expected_revision:server.revisions[o.id]||0},o.id);server.revisions[o.id]=r.revision;server.dirty=false;await refreshRemote();toast('Orden guardada en el hosting (revisión '+r.revision+').')}catch(e){serverMessage(e.status===409?'Conflicto: otra versión de esta orden existe en el servidor. Cárgala para revisarla antes de guardar.':e.message)}}
 async function loadRemote(id){try{const result=await api('order','GET',null,id);const remote=result.order;if(!remote||!remote.id)throw Error('Orden remota incompleta');const exists=db.orders.some(x=>x.id===remote.id);if(exists&&!confirm('Esta orden ya existe en este dispositivo. ¿Reemplazar la copia LOCAL con la versión del servidor?'))return;const ix=db.orders.findIndex(x=>x.id===remote.id);if(ix>=0)db.orders[ix]=remote;else db.orders.push(remote);if(db.orders.length>100){db.orders.shift()}db.activeId=remote.id;migrateCatalog();selectedTestId='';server.revisions[remote.id]=result.revision;server.dirty=false;activeTab='orden';renderAll();save();toast('Orden descargada al dispositivo.')}catch(e){serverMessage(e.message)}}
 document.addEventListener('input',e=>{const d=e.target.dataset;if(!d||!d.scope)return;const obj=getObject(d.scope,d.id);if(!obj)return;obj[d.key]=e.target.value;const t=activeTest();if(d.scope==='control')refreshControlCard(e.target.closest('[data-control-id]'),obj);if(d.scope==='order')activeOrder().tests.forEach(invalidate);else if(d.key!=='status')invalidate(t);changed()});
-document.addEventListener('change',e=>{const d=e.target.dataset;if(d?.deliverySelect){if(activeOrder().tests.some(t=>t.id===e.target.value)){selectedTestId=e.target.value;renderDelivery()}return}if(d?.status){const t=getTestById(d.status);if(t)t.status=e.target.value;renderTests();changed();return}if(d?.scope){const obj=getObject(d.scope,d.id);if(obj){obj[d.key]=e.target.value;if(d.scope==='control')refreshControlCard(e.target.closest('[data-control-id]'),obj);if(d.scope==='order')activeOrder().tests.forEach(invalidate);else invalidate(activeTest());changed()}}});
+document.addEventListener('change',e=>{const d=e.target.dataset;if(d?.orderSwitch){if(db.orders.some(o=>o.id===e.target.value)){db.activeId=e.target.value;selectedTestId='';renderAll();changed()}return}if(d?.deliverySelect){if(activeOrder().tests.some(t=>t.id===e.target.value)){selectedTestId=e.target.value;renderDelivery()}return}if(d?.status){const t=getTestById(d.status);if(t)t.status=e.target.value;renderTests();changed();return}if(d?.scope){const obj=getObject(d.scope,d.id);if(obj){obj[d.key]=e.target.value;if(d.scope==='control')refreshControlCard(e.target.closest('[data-control-id]'),obj);if(d.scope==='order')activeOrder().tests.forEach(invalidate);else invalidate(activeTest());changed()}}});
 document.addEventListener('click',e=>{const nav=e.target.closest('[data-nav]');if(nav){navigate(nav.dataset.nav);return}const ob=e.target.closest('[data-select-order]');if(ob){db.activeId=ob.dataset.selectOrder;selectedTestId='';renderAll();changed();return}const tb=e.target.closest('[data-select-test]');if(tb){selectedTestId=tb.dataset.selectTest;renderTests();return}const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action,o=activeOrder(),t=activeTest();
+if(a==='toggle-menu'){toggleDrawer(!document.body.classList.contains('menu-open'));return}
+if(a==='close-menu'){toggleDrawer(false);return}
 if(a.startsWith('wf-')){workflowAction(a,b);return}
 switch(a){case'new-order':{const n=newOrder();db.orders.push(n);db.activeId=n.id;selectedTestId='';activeTab='orden';renderAll();changed();toast('Nueva orden creada');break}
 case'duplicate-order':{const copy=JSON.parse(JSON.stringify(o));copy.id=uid();copy.ot=(copy.ot||'OT')+'-COPIA';copy.tests.forEach(s=>{s.id=uid();s.reportNo='';s.status='borrador';delete s.signedAt;delete s.signedBy;delete s.reviewedAt;s.controls.forEach(c=>c.id=uid());s.items.forEach(r=>r.id=uid())});db.orders.push(copy);db.activeId=copy.id;selectedTestId='';activeTab='orden';renderAll();changed();break}
@@ -475,6 +511,7 @@ case'print-single':printReport(true);break;
 }}
 );
 $('importInput').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;if(f.size>1500000){toast('Respaldo demasiado grande');e.target.value='';return}try{const d=sane(JSON.parse(await f.text()));if(!confirm('¿Importar respaldo? Reemplazará las órdenes guardadas en este dispositivo.'))return;db=d;migrateCatalog();selectedTestId='';renderAll();save();toast('Respaldo importado')}catch(err){toast('No se pudo importar: '+err.message)}finally{e.target.value=''}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('menu-open'))toggleDrawer(false)});
 window.addEventListener('resize',()=>requestAnimationFrame(fitPaper));
 // Guardar cambios pendientes al recargar, cambiar de aplicación o cerrar la pestaña.
 window.addEventListener('pagehide',flushPendingSave);
