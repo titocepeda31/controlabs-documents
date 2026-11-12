@@ -74,6 +74,92 @@
 .delivery-card{max-width:660px;margin:5px auto;border:1px solid var(--line);background:#f8fbf9;border-radius:16px;padding:21px}.delivery-card h3{margin:0 0 10px}.delivery-card p{line-height:1.6;color:#49666b}.delivery-card .btn{width:100%;min-height:48px;margin:7px 0;white-space:normal}.delivery-card .chip{font-size:12px}
 @media(max-width:740px){.workflow-extra-grid{grid-template-columns:1fr}.tabs{padding:8px 8px 0;overflow-x:auto}.tab{flex:0 0 auto}.mobilebar{gap:4px}.mobilebar .btn{padding:8px 1px;font-size:9px}.primary-workflow{padding:14px}.delivery-card{padding:15px}}
 @media print{#previewTestPicker{display:none!important}}
+
+/* Controlabs demo: módulos separados, navegación por cajón lateral */
+body{background:#f5f7f6}
+.topbar{z-index:100;position:sticky;top:0;background:rgba(255,255,255,.98);box-shadow:0 2px 14px #0b37340c}
+.topinner{max-width:1200px;min-height:68px;padding:10px 24px;justify-content:flex-start;gap:15px}
+.brandline{font-size:16px;letter-spacing:-.4px}.brand .mark{width:39px;height:39px;border-radius:11px}
+.menu-toggle{width:44px;height:44px;flex:none;display:grid;place-items:center;background:#f1f6f4;border:1px solid #dbe6df;border-radius:12px;color:#17584e;font-size:20px;cursor:pointer}
+.menu-toggle:hover{background:#e4f2eb}
+.header-status{display:flex;align-items:flex-end;flex-direction:column;margin-left:auto;min-width:0;gap:5px}
+.current-view{font-weight:800;color:#244f49;font-size:12px}
+.header-status .save-state{font-size:10px}
+.shell{display:block;max-width:1160px;padding:32px 22px 75px;margin:auto}
+.workspace{border:0;box-shadow:none;background:transparent;overflow:visible}
+.intro,.tabs,.mobilebar{display:none!important}
+.panel{max-width:1050px;min-height:65vh;margin:0 auto;padding:30px 33px 35px;background:#fff;border:1px solid #e5ece8;border-radius:20px;box-shadow:0 8px 32px #12382f0a}
+.sectionhead{margin-bottom:23px;padding-bottom:18px;border-bottom:1px solid #e9efeb}
+.sectionhead h2{font-size:clamp(22px,3vw,28px);letter-spacing:-.8px;margin:5px 0 7px}
+.sectionhead p{font-size:13px;line-height:1.55;max-width:650px}
+.module-eyebrow,.menu-kicker{display:block;color:#2a7767;font-size:10px;font-weight:900;letter-spacing:1.3px;text-transform:uppercase}
+.subtle-callout{border-left:3px solid #9bc6b7;background:#f7faf9;padding:11px 14px;border-radius:0 8px 8px 0;font-size:11px;color:#57726b;margin:0 0 22px}
+.menu-backdrop{position:fixed;inset:0;background:rgba(15,37,36,.42);z-index:105;cursor:pointer}
+.menu-backdrop[hidden]{display:none!important}
+.sidebar{position:fixed;top:0;left:0;width:min(350px,90vw);height:100dvh;z-index:110;display:flex;flex-direction:column;gap:0;background:#fff;box-shadow:12px 0 35px #183a3030;transform:translateX(-104%);transition:transform .22s ease;pointer-events:none;overflow:auto;padding:0 0 24px}
+body.menu-open{overflow:hidden}body.menu-open .sidebar{transform:translateX(0);pointer-events:auto}
+.drawer-heading{display:flex;align-items:center;justify-content:space-between;padding:24px 20px 17px;border-bottom:1px solid #e7eeea}
+.drawer-heading strong{display:block;font-size:18px;color:#143a33;margin-top:5px}
+.drawer-close{border:0;background:#f3f7f5;border-radius:9px;width:34px;height:34px;color:#476660;cursor:pointer;font-size:16px}
+.role-menu{padding:13px 12px;display:grid;gap:5px}
+.menu-link{display:flex;align-items:center;gap:12px;text-align:left;width:100%;border:1px solid transparent;background:transparent;border-radius:13px;padding:12px;color:#2a4540;cursor:pointer}
+.menu-link:hover{background:#f2f7f4}
+.menu-link.selected{background:#e8f4ee;border-color:#cce3d7}
+.menu-link strong,.menu-link small{display:block}
+.menu-link strong{font-size:13px;line-height:1.3}.menu-link small{font-size:10px;color:#6d827a;margin-top:4px}
+.menu-icon{font-size:11px;font-weight:850;border:1px solid #d5e4db;background:#fff;border-radius:10px;width:36px;height:36px;display:grid;place-items:center;flex:none;color:#4b8172}
+.menu-link.selected .menu-icon{background:#176d68;border-color:#176d68;color:#fff}
+.drawer-orders{padding:17px 16px;border-top:1px solid #edf1ee}
+.drawer-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;margin-bottom:10px}
+.drawer-orders .order-stack{display:grid;gap:4px}
+.drawer-orders .order-item{margin:0;border:1px solid #edf0ee;background:#fafbfa}
+.drawer-orders .order-item.active{background:#eaf4ef;border-color:#c5ded3}
+.drawer-utilities{display:grid;gap:2px;padding:16px;border-top:1px solid #edf1ee}
+.drawer-utilities .menu-kicker{margin-bottom:8px}
+.utility-link{border:0;border-radius:8px;background:none;text-align:left;color:#46665d;padding:10px;font-size:12px;cursor:pointer}
+.utility-link:hover{background:#f1f7f3}
+.drawer-disclaimer{color:#738b81;line-height:1.6;font-size:10px;padding:7px 26px;margin:0}
+.order-context{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#f5faf7;border:1px solid #dfece5;border-radius:12px;padding:11px 14px;margin:2px 0 18px}
+.order-context .order-context-label{font-size:11px;color:#6b8077;font-weight:700}
+.order-context select{min-width:min(330px,75vw);max-width:100%;border:1px solid #cddfd4;border-radius:10px;background:white;color:#1f473e;min-height:40px;padding:8px 10px;font-weight:700;font-size:12px}
+.order-context .order-context-work{font-size:11px;color:#71867b}
+#panel-gestion .primary-workflow{border:1px solid #dbeae1;background:#f9fcfa}
+#panel-gestion .workflow-extras{margin-top:22px}
+#panel-ensayos .test-editor>.sectionhead h2{font-size:17px;letter-spacing:0}
+#panel-ensayos [data-action="add-custom"]{display:none}
+#panel-ensayos .control-group .notice{font-size:11px}
+#panel-ensayos .testlist{border-color:#e3ebe6}
+#panel-documento .report-toolbar .btn{font-size:12px}
+#panel-documento .preview-box{border-color:#dce6df}
+#panel-validacion .validation-card{background:#fcfdfc}
+#panel-entrega .delivery-card{border:1px solid #dbeae1;box-shadow:none;background:#fcfdfd}
+@media(max-width:740px){
+ .topinner{min-height:61px;padding:8px 13px;gap:10px}
+ .menu-toggle{width:40px;height:40px}
+ .brandline{font-size:14px}.brand .mark{width:33px;height:33px;font-size:20px}
+ .brand .brandsub{font-size:9px}
+ .header-status .save-state{display:none}
+ .current-view{font-size:10px;text-align:right;max-width:110px;line-height:1.3}
+ .shell{padding:13px 10px 28px}
+ .panel{border-radius:14px;min-height:calc(100dvh - 88px);padding:19px 15px 28px}
+ .sectionhead{margin-bottom:17px;padding-bottom:14px}
+ .sectionhead h2{font-size:23px;margin-top:5px}
+ .sectionhead p{font-size:12px}
+ .order-context select{min-width:0;width:100%}
+ .order-context{display:block}
+ .order-context .order-context-work{display:block;margin-top:7px}
+ .drawer-orders .order-stack{display:grid;overflow:visible}
+ .drawer-orders .order-item{min-width:0}
+ .test-layout{display:block}
+ .testlist{display:flex;gap:7px;overflow-x:auto;margin-bottom:14px;flex-wrap:nowrap}
+ .testnav{flex:0 0 175px;max-width:none}
+}
+@media print{
+ .topbar,.menu-backdrop,.sidebar,.drawer-disclaimer,.order-context,.subtle-callout,#previewTestPicker{display:none!important}
+ body.menu-open{overflow:visible}
+ .shell,.workspace,#panel-documento{display:block!important;background:#fff!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important;max-width:none!important;min-height:0!important}
+ .panel:not(#panel-documento){display:none!important}
+}
 </style>
 </head>
 <body>
