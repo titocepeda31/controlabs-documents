@@ -470,7 +470,7 @@ function workflowAction(action,b){
  if(a==='wf-approve'){
   if(t.status!=='revision'){toast('Este informe no está pendiente.');return}
   const issues=reportReadiness(o,t);if(issues.length){toast('No se puede revisar: '+issues[0]);return}
-  if(!confirm('¿Marcar este informe como DOCUMENTO VALIDADO (DEMO)? Esta acción no representa revisión técnica oficial ni firma electrónica.'))return;
+  // Botón de validación demo: transición directa sin diálogo emergente bloqueante.
   t.status='revisado';t.reviewer='Validador de demostración';t.reviewedAt=new Date().toISOString();pushWorkflow(t,'Documento validado en demostración');
   db.activeId=o.id;selectedTestId=t.id;activeTab='validacion';changed();renderAll();toast('DOCUMENTO VALIDADO · DEMO. Disponible para firma simulada.');return;
  }
