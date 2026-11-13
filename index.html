@@ -258,14 +258,49 @@ function linkWorkToOrder(o,work) {
  if(!client)throw Error('La obra no tiene empresa asociada');
  Object.assign(o,{clientId:client.id,workId:work.id,clientName:client.name,clientAddress:client.address||'',workName:work.name,workAddress:work.address||'',contractor:work.contractor||'',principal:work.principal||'',region:work.region||'',protocolRef:work.reference||''});
 }
+function managementClient(){
+ return db.catalog.clients.find(c=>c.id===$('wf-order-client')?.value)||null;
+}
+function managementWork(){
+ const client=managementClient();
+ return db.catalog.works.find(w=>w.id===$('wf-order-work')?.value&&w.clientId===client?.id)||null;
+}
+function showSelectedHeader(){
+ const holder=$('wf-header-preview');if(!holder)return;
+ const client=managementClient(),work=managementWork();
+ if(!client||!work){holder.innerHTML='<p class="helptext">Primero selecciona una empresa y su obra. Después se mostrarán los datos que pasarán a la cabecera de la OT.</p>';return}
+ holder.innerHTML=`<div class="header-inline-label">Datos que se copiarán a la cabecera</div><div class="header-preview-grid"><div><small>EMPRESA CLIENTE / SOLICITANTE</small><strong>${enc(client.name)}</strong><span>${enc(client.address||'Dirección pendiente')}</span></div><div><small>OBRA / LUGAR DE ENSAYO</small><strong>${enc(work.name)}</strong><span>${enc(work.address||'Ubicación pendiente')}</span></div></div><p class="tiny">El <strong>laboratorio emisor</strong>, la fecha del informe y el responsable de la firma se revisan en la siguiente pantalla. No son la misma entidad que el cliente.</p>`;
+}
+function populateManagementWorks(preferId=''){
+ const client=managementClient(),target=$('wf-order-work');if(!target)return;
+ const works=db.catalog.works.filter(w=>w.clientId===client?.id);
+ target.innerHTML=works.length?works.map(w=>`<option value="${enc(w.id)}" ${w.id===preferId?'selected':''}>${enc(w.name)}</option>`).join(''):'<option value="">No hay obras registradas para esta empresa</option>';
+ showSelectedHeader();
+}
 function renderManagement(){
- const clients=db.catalog.clients,works=db.catalog.works;
- const clientOpts=clients.map(c=>`<option value="${enc(c.id)}">${enc(c.name)}</option>`).join('');
- const workOpts=works.map(w=>{const c=clients.find(x=>x.id===w.clientId);return `<option value="${enc(w.id)}">${enc(c?.name||'?')} · ${enc(w.name)}</option>`}).join('');
- const rows=db.orders.map(o=>`<div class="workflow-order"><div><strong>${enc(o.ot||'OT sin número')}</strong><small>${enc(o.clientName||'Empresa sin indicar')} · ${enc(o.workName||'Obra sin indicar')} · ${o.tests.length} ensayo(s)</small></div><button class="btn mini" data-action="wf-open-order" data-oid="${enc(o.id)}">Abrir densidades →</button></div>`).join('');
- $('managementPanel').innerHTML=`<div class="simple-workflow"><div class="primary-workflow"><div class="flowstep">1</div><h3>Crear orden de trabajo</h3><p class="tiny">Selecciona la obra y recupera los datos administrativos existentes.</p><div class="formgrid"><div class="field full"><label for="wf-order-work">Empresa y obra</label><select id="wf-order-work">${workOpts||'<option value="">Primero registra una empresa y una obra</option>'}</select></div><div class="field"><label for="wf-order-number">Número de OT</label><input id="wf-order-number" maxlength="80" placeholder="OT-DEMO-002"></div><div class="field"><label for="wf-order-oc">Orden de compra (opcional)</label><input id="wf-order-oc" maxlength="80"></div></div><button class="btn main" data-action="wf-create-order">Crear OT y llenar densidades →</button></div>
- <details class="workflow-extras"><summary>+ Opciones adicionales: registrar empresa u obra nueva</summary><div class="workflow-extra-grid"><div class="workflow-form"><h3>A. Nueva empresa</h3><div class="field"><label>Razón social</label><input id="wf-client-name" maxlength="160" placeholder="Empresa ficticia"></div><div class="field"><label>Dirección</label><input id="wf-client-address" maxlength="180"></div><button class="btn" data-action="wf-add-client">Guardar empresa</button></div><div class="workflow-form"><h3>B. Nueva obra</h3><div class="field"><label>Empresa</label><select id="wf-work-client">${clientOpts||'<option value="">Primero crea una empresa</option>'}</select></div><div class="field"><label>Nombre de obra</label><input id="wf-work-name" maxlength="160"></div><div class="field"><label>Ubicación</label><input id="wf-work-address" maxlength="180"></div><div class="field"><label>Referencia/protocolo (por confirmar)</label><input id="wf-work-reference" maxlength="80"></div><button class="btn" data-action="wf-add-work">Guardar obra</button></div></div></details>
- <h3 class="subhead">Órdenes existentes</h3><div class="workflow-orderlist">${rows}</div><p class="notice"><strong>Ruta de la demo:</strong> OT → densidades → revisar documento → validar → firma simulada → guardar PDF. Una sola persona puede recorrer las etapas.</p></div>`;
+ const clients=db.catalog.clients;
+ const preferred=clients.find(c=>c.id===activeOrder().clientId)||clients[0];
+ const clientOpts=clients.map(c=>`<option value="${enc(c.id)}" ${c.id===preferred?.id?'selected':''}>${enc(c.name)}</option>`).join('');
+ const rows=db.orders.map(o=>`<div class="workflow-order"><div><strong>${enc(o.ot||'OT sin número')}</strong><small>${enc(o.clientName||'Empresa sin indicar')} · ${enc(o.workName||'Obra sin indicar')} · ${o.tests.length} ensayo(s)</small></div><div class="inline-acts"><button class="btn mini" data-action="wf-open-order-header" data-oid="${enc(o.id)}">Ver cabecera</button><button class="btn mini main" data-action="wf-open-order" data-oid="${enc(o.id)}">Abrir mediciones</button></div></div>`).join('');
+ $('managementPanel').innerHTML=`<div class="simple-workflow">
+ <div class="primary-workflow">
+ <span class="module-eyebrow">NUEVA ORDEN</span><h3>Crear orden de trabajo</h3>
+ <p class="tiny">La empresa es quien solicita el servicio; la obra identifica dónde se hacen los controles.</p>
+ <div class="formgrid">
+ <div class="field"><label for="wf-order-client">1. Empresa cliente / solicitante</label><select id="wf-order-client" data-client-select="1">${clientOpts||'<option value="">Registra una empresa primero</option>'}</select></div>
+ <div class="field"><label for="wf-order-work">2. Obra asociada</label><select id="wf-order-work" data-work-select="1"></select></div>
+ </div>
+ <div id="wf-header-preview" class="header-inline-preview"></div>
+ <div class="formgrid"><div class="field"><label for="wf-order-number">3. Número de OT</label><input id="wf-order-number" maxlength="80" placeholder="OT-DEMO-002"></div>
+ <div class="field"><label for="wf-order-oc">Nº orden de compra (opcional)</label><input id="wf-order-oc" maxlength="80" placeholder="OC de ejemplo"></div></div>
+ <button class="btn main" data-action="wf-create-order">Crear OT y completar cabecera →</button></div>
+ <details class="workflow-extras"><summary>+ Registrar nueva empresa u obra</summary><div class="workflow-extra-grid">
+ <div class="workflow-form"><h3>Empresa cliente</h3><p class="tiny">Razón social y dirección del solicitante.</p><div class="field"><label>Razón social</label><input id="wf-client-name" maxlength="160" placeholder="Empresa ficticia"></div><div class="field"><label>Dirección</label><input id="wf-client-address" maxlength="180"></div><button class="btn" data-action="wf-add-client">Guardar empresa</button></div>
+ <div class="workflow-form"><h3>Obra</h3><p class="tiny">La obra siempre pertenece a una empresa.</p><div class="field"><label>Empresa titular</label><select id="wf-work-client">${clientOpts||'<option value="">Primero crea una empresa</option>'}</select></div><div class="field"><label>Nombre de la obra</label><input id="wf-work-name" maxlength="160"></div><div class="field"><label>Ubicación</label><input id="wf-work-address" maxlength="180"></div><div class="field"><label>Referencia / protocolo (por confirmar)</label><input id="wf-work-reference" maxlength="80"></div><button class="btn" data-action="wf-add-work">Guardar obra</button></div>
+ </div></details>
+ <h3 class="subhead">Órdenes existentes</h3><div class="workflow-orderlist">${rows}</div>
+ </div>`;
+ populateManagementWorks(activeOrder().workId);
 }
 function reportReadiness(o,t) {
  const missing=[];
