@@ -212,6 +212,74 @@ body.menu-open{overflow:hidden}body.menu-open .sidebar{transform:translateX(0);p
 @media print{
  .document-header-summary{display:none!important}
 }
+
+/* Demostración por perfil: una pantalla por cargo, nunca un tablero con todos los formularios */
+.role-switch{border:1px solid #cfe2d8;color:#216a55;background:#f1f8f4;padding:9px 13px;border-radius:10px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
+.role-switch:hover{background:#e6f3eb}
+.header-status{display:flex;align-items:center;flex-direction:row;gap:12px}
+.header-status .save-state{display:none}
+.role-landing{background:transparent;border:0;box-shadow:none;max-width:1100px;padding:47px 8px 45px;min-height:75vh}
+.role-landing h1{font-size:clamp(29px,4vw,44px);color:#1b473c;letter-spacing:-1.3px;line-height:1.15;margin:14px 0 12px}
+.role-landing-desc{font-size:14px;line-height:1.65;color:#6a7c73;max-width:650px;margin:0 0 30px}
+.role-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}
+.role-card{display:flex;flex-direction:column;text-align:left;align-items:flex-start;gap:18px;background:#fff;color:#274b40;border:1px solid #dce8e0;border-radius:18px;padding:24px;min-height:305px;cursor:pointer;box-shadow:0 10px 25px #173d2c0a;transition:transform .15s,border-color .15s,box-shadow .15s}
+.role-card:hover,.role-card:focus-visible{border-color:#83b8a1;transform:translateY(-2px);box-shadow:0 15px 30px #173d2c14;outline:none}
+.role-card-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:#e6f3ec;color:#246d54;font-size:13px;font-weight:900}
+.role-card-body{display:flex;flex-direction:column;flex:1;min-width:0}
+.role-card-eyebrow{font-size:10px;color:#679183;font-weight:850;letter-spacing:1.1px;margin-bottom:8px}
+.role-card-body>strong{font-size:22px;letter-spacing:-.65px;margin-bottom:11px}
+.role-card-body>small{font-size:13px;color:#71847a;line-height:1.65;font-weight:400;flex:1}
+.role-card-action{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:24px;font-weight:800;color:#126958;font-size:12px}
+.role-landing-note{font-size:11px;color:#84988d;margin:23px 0}
+#panel-gestion .simple-workflow{max-width:750px}
+#panel-gestion .workflow-orderlist .workflow-order{background:#fff}
+#panel-gestion .workflow-orderlist .btn{font-size:11px}
+#panel-orden .header-editor{max-width:780px}
+#panel-ensayos .panel-role-help{display:none}
+#panel-ensayos .quick-context{justify-content:flex-start}
+#panel-ensayos .test-act{display:none}
+#panel-ensayos .testlist .testnav{min-width:145px}
+#panel-ensayos .test-editor .subhead{font-size:13px}
+#panel-ensayos .editor-card{background:#fff}
+#panel-ensayos .inline-acts .btn[data-action="wf-submit-review"]{padding:13px 18px;font-size:13px;min-height:48px}
+.lab-disclaimer{margin:19px 0 0;font-size:11px;color:#74877b;line-height:1.6}
+.reviewer-disclaimer{font-size:11px;color:#73877b;margin:0 0 18px;padding:10px 12px;border:1px solid #e1e9e3;border-radius:10px;background:#f9fbf9}
+#panel-documento .document-header-summary{margin-top:14px}
+#panel-documento .document-header-details{gap:14px}
+#panel-documento .header-footnote .btn,.document-header-top .btn{display:none}
+.reviewer-action-card{border:1px solid #cfe0d6;background:#f6faf7;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:19px 21px;border-radius:14px;margin:17px 0}
+.reviewer-action-card.is-approved{background:#eff8f1;border-color:#abd2b9}
+.reviewer-action-info{min-width:0;flex:1}
+.reviewer-action-info h3{font-size:18px;font-weight:850;color:#214e3c;margin:6px 0 7px}
+.reviewer-action-info p{font-size:12px;color:#557264;margin:0;line-height:1.55;max-width:620px}
+.reviewer-action-buttons{flex:none;max-width:250px;display:flex;flex-direction:column;gap:8px;align-items:stretch}
+.reviewer-action-buttons .btn{white-space:normal;font-size:12px;min-height:43px}
+.reviewer-waiting{font-size:11px;display:block;color:#587b6a;background:white;border:1px solid #dce9df;padding:10px;border-radius:8px;text-align:center}
+@media(max-width:900px){.role-cards{grid-template-columns:1fr;gap:13px}.role-card{min-height:0;flex-direction:row;gap:16px;padding:19px}.role-card-body>small{flex:0}.role-card-action{margin-top:16px}}
+@media(max-width:740px){
+ .role-landing{padding:24px 3px;min-height:0}
+ .role-landing h1{font-size:31px;margin:10px 0}
+ .role-landing-desc{font-size:13px;margin-bottom:22px}
+ .role-card{padding:18px;gap:13px;border-radius:14px}
+ .role-card-icon{width:40px;height:40px;flex:none}
+ .role-card-body>strong{font-size:19px;margin-bottom:8px}
+ .role-card-body>small{font-size:12px}
+ .role-card-action{margin-top:12px;font-size:11px}
+ .role-switch{font-size:10px;padding:8px}
+ .header-status{gap:6px}
+ .current-view{font-size:10px;max-width:96px}
+ #panel-documento .document-header-summary{padding:12px}
+ .reviewer-action-card{display:block;padding:15px}
+ .reviewer-action-info h3{font-size:16px}
+ .reviewer-action-buttons{max-width:none;width:100%;margin-top:15px}
+ .reviewer-action-buttons .btn{width:100%}
+ #panel-ensayos .test-layout{display:block}
+}
+@media print{
+ #panel-roles,#reviewerActions,.reviewer-disclaimer,.role-landing,.role-switch,.header-status{display:none!important}
+ #panel-documento .document-header-summary{display:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -229,6 +297,7 @@ body.menu-open{overflow:hidden}body.menu-open .sidebar{transform:translateX(0);p
       <button class="menu-link" data-nav="ensayos"><span class="menu-icon">02</span><span><strong>Laboratorista</strong><small>Registrar mediciones de densidad</small></span></button>
       <button class="menu-link" data-nav="documento"><span class="menu-icon">03</span><span><strong>Validador</strong><small>Revisar informe, validar y emitir PDF</small></span></button>
     </nav>
+    <div id="ordersList" hidden></div>
     <div class="drawer-utilities"><button class="utility-link" data-nav="roles">← Elegir vista de demostración</button></div>
     <p class="drawer-disclaimer">El cambio de perfil solo simula las pantallas: no existen cuentas, roles reales ni firmas electrónicas.</p>
   </aside>
