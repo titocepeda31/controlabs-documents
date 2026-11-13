@@ -280,6 +280,10 @@ body.menu-open{overflow:hidden}body.menu-open .sidebar{transform:translateX(0);p
  #panel-documento .document-header-summary{display:none!important}
 }
 
+/* Una sola ficha de densidad no necesita una columna adicional de navegación */
+#panel-ensayos .test-layout{display:block}
+#panel-ensayos .testlist{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px}
+@media(max-width:740px){#panel-ensayos .testlist{overflow-x:auto;flex-wrap:nowrap}}
 </style>
 </head>
 <body>
@@ -581,7 +585,11 @@ function renderOrder(){
 }
 function statusName(s){return({'borrador':'Borrador','revision':'En revisión','observado':'Con observaciones','revisado':'Documento validado · DEMO','firma':'Pendiente de firma','firmado':'Validado · firma simulada'}[s]||'Borrador')}
 function statusChip(s){const cl=['revision','firma'].includes(s)?'review':s==='revisado'||s==='firmado'?'ok':s==='observado'?'issue':'';return`<span class="chip ${cl}">${enc(statusName(s))}</span>`}
-function renderTestList(){const o=activeOrder();return`<div class="testlist"><div class="cap" style="width:100%;padding:0 5px 6px">Ensayos de la OT</div>${o.tests.map((t,i)=>`<button class="testnav ${t.id===activeTest()?.id?'active':''}" data-select-test="${enc(t.id)}"><strong>${i+1}. ${enc(t.title||'Ensayo sin título')}</strong><small>${enc(t.reportNo||'Sin Nº informe')} · ${enc(statusName(t.status))}</small></button>`).join('')}</div>`}
+function renderTestList(){
+ const o=activeOrder(),density=o.tests.filter(t=>t.type==='density');
+ if(density.length<=1)return'';
+ return'<div class="testlist"><div class="cap" style="width:100%;padding:0 5px 6px">Informes de densidad de esta OT</div>'+density.map((t,i)=>'<button class="testnav '+(t.id===activeTest()?.id?'active':'')+'" data-select-test="'+enc(t.id)+'"><strong>'+(i+1)+'. '+enc(t.title||'Densidad')+'</strong><small>'+enc(t.reportNo||'Sin Nº informe')+' · '+enc(statusName(t.status))+'</small></button>').join('')+'</div>';
+}
 function testFields(t){return`<div class="formgrid">${field('Nombre del ensayo','title','test',t.title,{id:t.id,wide:true})}${field('Nº de informe','reportNo','test',t.reportNo,{id:t.id})}${field('Fecha del ensayo','testDate','test',t.testDate,{id:t.id,type:'date'})}${field('Laboratorista','technician','test',t.technician,{id:t.id})}${field('Método / referencia','method','test',t.method,{id:t.id,wide:true})}${field('Informe de referencia (si existe)','referenceReport','test',t.referenceReport,{id:t.id,wide:true})}${field('Notas del ensayo','notes','test',t.notes,{id:t.id,type:'textarea',wide:true})}</div>`}
 function controlCard(c,i){let n=computed(c);return`<details class="editor-card" data-control-id="${enc(c.id)}" ${i===0?'open':''}><summary><span><strong>Control ${enc(c.number||i+1)}</strong><small>${enc(c.location||'Ubicación pendiente')}</small></span><span class="chip" data-result="summary">${Number.isFinite(n.comp)?pretty(n.comp,0)+'% comp.':'Pendiente de cálculo'}</span></summary><div class="editor-body"><div class="formgrid">${field('Control Nº','number','control',c.number,{id:c.id})}${field('Identificación muestra','sample','control',c.sample,{id:c.id})}${field('Profundidad controlada','depth','control',c.depth,{id:c.id})}${field('Estructura','structure','control',c.structure,{id:c.id})}${field('Capa','layer','control',c.layer,{id:c.id})}${field('Tipo de material','material','control',c.material,{id:c.id})}${field('Ubicación del control','location','control',c.location,{id:c.id,wide:true})}${field('D.C.H. (g/cm³)','dch','control',c.dch,{id:c.id,inputmode:'decimal'})}${field('Humedad (%)','humidity','control',c.humidity,{id:c.id,inputmode:'decimal'})}${field('D.M.C.S. (g/cm³)','dmcs','control',c.dmcs,{id:c.id,inputmode:'decimal'})}${field('Especificación (%)','spec','control',c.spec,{id:c.id,inputmode:'decimal'})}${field('Densidad relativa máxima','relativeMax','control',c.relativeMax,{id:c.id})}${field('Densidad relativa mínima','relativeMin','control',c.relativeMin,{id:c.id})}${field('Procedencia del material','source','control',c.source,{id:c.id,wide:true})}${field('Fecha del ensaye','testDate','control',c.testDate,{id:c.id,type:'date'})}</div><div class="derived-results" aria-live="polite"><div class="derived-number"><span>D.C.S. calculada</span><strong><output data-result="dcs">${pretty(n.dry)}</output></strong><small>g/cm³</small></div><div class="derived-number"><span>Compactación calculada</span><strong><output data-result="comp">${pretty(n.comp,0)}</output></strong><small>%</small></div></div><p class="helptext" data-result="status">${enc(calcStatus(c))}</p><p class="helptext"><strong>Fórmulas:</strong> D.C.S. = D.C.H. / (1 + humedad/100); compactación (%) = (D.C.S. / D.M.C.S.) × 100. Estos resultados son de solo lectura y se actualizan al escribir.</p><div class="inline-acts"><button class="btn mini warn" data-action="delete-control" data-id="${enc(c.id)}">Quitar control</button></div></div></details>`}
 function refreshControlCard(card,c){if(!card||!c)return;const n=computed(c);const dcs=card.querySelector('[data-result="dcs"]'),comp=card.querySelector('[data-result="comp"]'),summary=card.querySelector('[data-result="summary"]'),status=card.querySelector('[data-result="status"]');if(dcs)dcs.textContent=pretty(n.dry);if(comp)comp.textContent=pretty(n.comp,0);if(summary)summary.textContent=Number.isFinite(n.comp)?pretty(n.comp,0)+'% comp.':'Pendiente de cálculo';if(status)status.textContent=calcStatus(c)}
@@ -648,7 +656,7 @@ function renderReviewerActions(o,t){
 function renderPreview(onlyId=selectedTestId){
  const o=activeOrder(),t=o.tests.find(x=>x.id===onlyId)||o.tests[0];if(t)selectedTestId=t.id;
  const selector=$('previewTestPicker');
- if(selector)selector.innerHTML='<p class="tiny">Selecciona el informe de esta OT que deseas revisar:</p><div class="preview-selector">'+o.tests.map(x=>'<button class="btn '+(x.id===t?.id?'main':'')+'" data-action="wf-select-preview" data-tid="'+enc(x.id)+'">'+enc(x.title)+'</button>').join('')+'</div>';
+ if(selector){const density=o.tests.filter(x=>x.type==='density');selector.innerHTML=density.length>1?'<p class="tiny">Selecciona el informe de densidad que vas a revisar:</p><div class="preview-selector">'+density.map(x=>'<button class="btn '+(x.id===t?.id?'main':'')+'" data-action="wf-select-preview" data-tid="'+enc(x.id)+'">'+enc(x.title)+'</button>').join('')+'</div>':'';}
  const summaryTarget=$('reportHeaderSummary');if(summaryTarget&&t)summaryTarget.innerHTML=reportHeaderSummary(o,t);
  renderReviewerActions(o,t);
  const pages=buildPages(t?.id||'');$('paperStack').innerHTML=pages.length?pages.join(''):'<div class="empty">Agrega un ensayo para comenzar.</div>';
@@ -673,6 +681,7 @@ function renderOrderContext(){
 function navigate(tab){
  activeTab=tab;
  toggleDrawer(false);
+ if(['ensayos','documento'].includes(tab)&&activeTest()?.type!=='density'){const density=activeOrder().tests.find(t=>t.type==='density');if(density)selectedTestId=density.id;}
  document.querySelectorAll('.role-menu [data-nav]').forEach(x=>{
   const on=x.dataset.nav===tab;x.classList.toggle('selected',on);
   if(on)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current');
