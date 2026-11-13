@@ -160,6 +160,58 @@ body.menu-open{overflow:hidden}body.menu-open .sidebar{transform:translateX(0);p
  .shell,.workspace,#panel-documento{display:block!important;background:#fff!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important;max-width:none!important;min-height:0!important}
  .panel:not(#panel-documento){display:none!important}
 }
+
+/* Cabecera: las entidades de un ensayo no deben confundirse entre sí */
+.header-inline-preview{background:#fff;border:1px solid #dde9e1;border-radius:13px;padding:15px;margin:-2px 0 17px}
+.header-inline-label{color:#57796f;font-size:11px;font-weight:800;margin-bottom:10px}
+.header-preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.header-preview-grid>div{border-left:2px solid #a3c7b5;padding-left:11px;min-width:0}
+.header-preview-grid small,.document-header-cell small,.document-header-details small{display:block;color:#6e877c;font-size:9px;font-weight:800;letter-spacing:.6px;margin-bottom:6px}
+.header-preview-grid strong,.document-header-cell strong{display:block;font-size:14px;color:#234b40;overflow-wrap:anywhere}
+.header-preview-grid span,.document-header-cell span{display:block;font-size:11px;color:#677e74;margin-top:3px;line-height:1.4;overflow-wrap:anywhere}
+.header-inline-preview>.tiny{margin:13px 0 0;line-height:1.6}
+.header-editor{display:grid;gap:16px}
+.header-edit-section{border:1px solid #e4ece6;border-radius:14px;padding:18px;background:#fff}
+.header-edit-heading{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px}
+.header-edit-heading h3{font-size:17px;margin:0 0 5px;color:#1e483e}
+.header-edit-heading p{font-size:11px;color:#74877d;margin:0}
+.header-edit-number{width:34px;height:34px;border-radius:10px;background:#eaf4ef;color:#286856;display:grid;place-items:center;font-size:12px;font-weight:850;flex:none}
+.document-header-summary{border:1px solid #e3ebe6;border-radius:14px;background:white;padding:17px;margin:12px 0 20px}
+.document-header-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.document-header-top h3{margin:5px 0 0;font-size:17px}
+.document-header-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.document-header-cell{background:#f7faf8;padding:14px;border:1px solid #e6eeea;border-radius:10px;min-width:0}
+.document-header-cell strong{font-size:13px}
+.document-header-details{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;border-top:1px solid #e5ece7;padding-top:14px;margin-top:16px}
+.document-header-details strong{font-size:13px;color:#26483c;overflow-wrap:anywhere}
+.document-header-details .chip{max-width:100%;white-space:normal;line-height:1.3}
+.document-valid-status{font-size:12px;color:#2a745a;font-weight:900;border:1px solid #bdd9c9;padding:12px;margin-top:15px;border-radius:10px}
+.document-valid-status small{display:block;color:#587669;font-weight:500;font-size:11px;margin-top:5px}
+.header-issues{background:#fff9f3;border:1px solid #f0dfcd;border-radius:9px;padding:10px 12px;font-size:11px;color:#905b2f}
+.header-footnote{margin:14px 0 0;font-size:11px;color:#6b8276;line-height:1.55}
+.header-footnote .btn{margin-left:6px;vertical-align:middle}
+.validation-success{border:1px solid #a9d0b7;border-left:4px solid #39825c;border-radius:12px;padding:18px;margin:0 0 22px;background:#fff}
+.validation-success>strong{font-size:17px;color:#27664e}
+.validation-success p{color:#547366;font-size:12px;line-height:1.5;margin:9px 0 14px}
+.validation-card-approved{border-color:#b8d8c5}
+.validated-row{font-size:11px;font-weight:850;color:#2f7159;margin:11px 0}
+.validated-row small{display:block;font-size:10px;font-weight:400;color:#64766d;margin-top:4px}
+.report-validation-stamp{border:1px solid #678a77;color:#30694e;background:#f6fbf7;text-align:center;padding:4px 6px;font-size:9px;font-weight:800;margin-bottom:7px;line-height:1.35}
+.report-validation-stamp span{display:block;font-size:7.6px;font-weight:400}
+.report-head .org{overflow-wrap:anywhere}
+.report-head .org>small:first-child{font-weight:bold;color:#2d6c56;font-size:7px;letter-spacing:.4px}
+@media(max-width:740px){
+ .header-preview-grid,.document-header-grid{grid-template-columns:1fr}
+ .document-header-details{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .document-header-summary{padding:13px}
+ .header-edit-section{padding:14px}
+ .header-edit-heading h3{font-size:15px}
+ .validation-success>strong{font-size:15px}
+ .validation-success .btn{width:100%}
+}
+@media print{
+ .document-header-summary{display:none!important}
+}
 </style>
 </head>
 <body>
