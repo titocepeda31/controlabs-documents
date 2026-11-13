@@ -462,16 +462,16 @@ function workflowAction(action,b){
   const o=activeOrder(),t=activeTest();if(!t)return;
   const issues=reportReadiness(o,t);if(issues.length){toast('Completa antes de enviar: '+issues[0]+(issues.length>1?' y '+(issues.length-1)+' campo(s) más.':''));return}
   if(t.status==='revision'||['revisado','firma','firmado'].includes(t.status)){toast('Este informe ya fue enviado o revisado; edita los datos para volver a borrador.');return}
-  t.status='revision';t.reviewNote='';pushWorkflow(t,'Enviado a revisión');changed();activeTab='validacion';renderAll();toast('Borrador enviado a la bandeja del validador.');return;
+  t.status='revision';t.reviewNote='';pushWorkflow(t,'Enviado a revisión');activeTab='ensayos';changed();renderAll();toast('Mediciones enviadas. El validador podrá revisar el informe desde su vista.');return;
  }
  const e=workflowEntry(b.dataset.oid,b.dataset.tid);if(!e)return;
  const {o,t}=e;
- if(a==='wf-goto-delivery'){db.activeId=o.id;selectedTestId=t.id;activeTab='entrega';renderAll();save();return}
+ if(a==='wf-goto-delivery'){db.activeId=o.id;selectedTestId=t.id;activeTab='documento';renderAll();save();return}
  if(a==='wf-sign'){
   if(t.status!=='revisado'){toast('Primero debes validar el informe.');return}
-  if(!confirm('Aplicar firma VISUAL SIMULADA. No tiene validez jurídica ni criptográfica. ¿Continuar?'))return;
+  // Firma visual expresamente simulada, sin diálogo emergente bloqueante.
   t.status='firmado';t.signedAt=new Date().toISOString();t.signedBy='Firmante ficticio · DEMO';
-  pushWorkflow(t,'Firma visual simulada, sin validez legal');changed();renderDelivery();toast('Firma simulada aplicada. Ahora puedes guardar el PDF.');return;
+  pushWorkflow(t,'Firma visual simulada, sin validez legal');activeTab='documento';changed();renderAll();toast('Firma visual DEMO aplicada. Ya puedes guardar el PDF.');return;
  }
  if(a==='wf-download'){
   if(t.status!=='firmado'){toast('Primero debes validar y firmar el informe de demostración.');return}
@@ -489,14 +489,14 @@ function workflowAction(action,b){
   const issues=reportReadiness(o,t);if(issues.length){toast('No se puede revisar: '+issues[0]);return}
   // Botón de validación demo: transición directa sin diálogo emergente bloqueante.
   t.status='revisado';t.reviewer='Validador de demostración';t.reviewedAt=new Date().toISOString();pushWorkflow(t,'Documento validado en demostración');
-  db.activeId=o.id;selectedTestId=t.id;activeTab='validacion';changed();renderAll();toast('DOCUMENTO VALIDADO · DEMO. Disponible para firma simulada.');return;
+  db.activeId=o.id;selectedTestId=t.id;activeTab='documento';changed();renderAll();toast('DOCUMENTO VALIDADO · DEMO. Disponible para firma simulada.');return;
  }
  if(a==='wf-observe'){
   if(t.status!=='revision'){toast('Este informe no está pendiente.');return}
   const note=prompt('Escribe la observación que deberá corregirse:','');
   if(note===null)return;
   const trimmed=note.trim().slice(0,800);if(!trimmed){toast('La observación es obligatoria.');return}
-  t.status='observado';t.reviewNote=trimmed;pushWorkflow(t,'Devuelto con observación',trimmed);changed();renderValidation();toast('Borrador devuelto al laboratorista.');return;
+  t.status='observado';t.reviewNote=trimmed;pushWorkflow(t,'Devuelto con observación',trimmed);activeTab='documento';changed();renderAll();toast('Observación registrada. El laboratorista podrá corregir el ensayo.');return;
  }
 }
 function renderOrders(){const a=activeOrder();$('ordersList').innerHTML=db.orders.map(o=>`<button class="order-item ${o.id===a.id?'active':''}" data-select-order="${enc(o.id)}"><strong>${enc(o.ot||'OT sin número')}</strong><span>${enc(o.workName||o.clientName||'Orden por completar')} · ${o.tests.length} ensayo(s)</span></button>`).join('')}
@@ -519,7 +519,7 @@ function refreshControlCard(card,c){if(!card||!c)return;const n=computed(c);cons
 function customRow(it,i){return`<details class="editor-card" ${i===0?'open':''}><summary><span><strong>Dato / resultado ${i+1}</strong><small>${enc(it.name||'Campo pendiente')}: ${enc(it.value||'—')}</small></span><span class="chip">Editar</span></summary><div class="editor-body"><div class="formgrid">${field('Concepto o resultado','name','item',it.name,{id:it.id,wide:true})}${field('Valor','value','item',it.value,{id:it.id})}${field('Unidad','unit','item',it.unit,{id:it.id})}</div><div class="inline-acts"><button class="btn mini warn" data-action="delete-item" data-id="${enc(it.id)}">Quitar campo</button></div></div></details>`}
 function controlsByPages(t){return Array.from({length:Math.max(1,Math.ceil(t.controls.length/6))},(_,i)=>{const group=t.controls.slice(i*6,(i+1)*6);return `<div class="control-group" data-control-page="${i+1}"><div class="control-group-head"><strong>Hoja ${i+1} · Controles ${i*6+1}–${i*6+group.length}</strong><small>${group.length}/6 columnas · mismos datos generales</small></div>${group.map((c,j)=>controlCard(c,i*6+j)).join('')}</div>`}).join('')}
 function renderTests(){const o=activeOrder();if(!o.tests.length){$('testEditor').innerHTML='<div class="empty">Esta orden aún no tiene ensayos. Pulsa «+ Densidad in situ» o «+ Otro ensayo».</div>';return}const t=activeTest();selectedTestId=t.id;let controls=t.type==='density'?`${sectionTitle('Controles y mediciones')}<div class="notice"><strong>Paginación automática:</strong> 1–6 = hoja 1; 7–12 = hoja 2; 13–18 = hoja 3. Cada hoja repite cliente, obra, laboratorista y datos del informe. Se usa un mismo ensayo, no tienes que duplicarlo.</div>${controlsByPages(t)}<div class="inline-acts"><button class="btn main" data-action="add-control">+ 1 control</button><button class="btn" data-action="complete-six">Completar hoja de 6</button><button class="btn" data-action="add-six">+ 6 controles</button></div>`:`${sectionTitle('Resultados del ensayo · plantilla genérica')}<p class="helptext">No representa un formato técnico aprobado. Para cada nuevo tipo de ensayo se deberá diseñar su planilla real.</p>${t.items.map(customRow).join('')}<button class="btn main" data-action="add-item">+ Agregar resultado</button>`;
-$('testEditor').innerHTML=`<div class="test-layout">${renderTestList()}<div class="test-editor"><div class="sectionhead"><div><h2>${enc(t.title)}</h2><p>${t.type==='density'?'Registra cada control; el informe añade otra hoja al superar seis.':'Ingresa los resultados del ensayo de demostración.'}</p></div>${statusChip(t.status)}</div><div class="quick-context"><span><strong>OT:</strong> ${enc(o.ot||'Por completar')}</span><span class="tiny">${enc(o.clientName||'Empresa pendiente')} · ${enc(o.workName||'Obra pendiente')}</span></div>${t.status==='observado'?`<p class="note"><strong>Devuelto con observaciones:</strong> ${enc(t.reviewNote||'Revisa el ensayo antes de volver a enviarlo.')}</p>`:''}${controls}<div class="inline-acts"><button class="btn main" data-action="wf-submit-review">Enviar mediciones a revisión</button></div><details class="meta-panel"><summary>Datos generales del ensayo <span class="meta-hint">Opcional durante la captura</span></summary><div class="meta-body">${sectionTitle('Identificación del informe')}${testFields(t)}<div class="test-act"><label>Estado del flujo</label><strong>${enc(statusName(t.status))}</strong><p class="hint">Solo se registran las mediciones y los antecedentes del ensayo. La validación pertenece a otro perfil.</p></div></div></details><div class="inline-acts"></div></div></div>`}
+$('testEditor').innerHTML=`<div class="test-layout">${renderTestList()}<div class="test-editor"><div class="sectionhead"><div><h2>${enc(t.title)}</h2><p>${t.type==='density'?'Registra cada control; el informe añade otra hoja al superar seis.':'Ingresa los resultados del ensayo de demostración.'}</p></div>${statusChip(t.status)}</div><div class="quick-context"><span><strong>OT:</strong> ${enc(o.ot||'Por completar')}</span><span class="tiny">${enc(o.clientName||'Empresa pendiente')} · ${enc(o.workName||'Obra pendiente')}</span></div>${t.status==='observado'?`<p class="note"><strong>Devuelto con observaciones:</strong> ${enc(t.reviewNote||'Revisa el ensayo antes de volver a enviarlo.')}</p>`:''}${controls}<div class="inline-acts"><button class="btn main" data-action="wf-submit-review" ${['revision','revisado','firmado'].includes(t.status)?'disabled':''}>${t.status==='revision'?'✓ Enviado a revisión':t.status==='revisado'||t.status==='firmado'?'✓ Informe revisado':'Enviar mediciones a revisión'}</button></div><details class="meta-panel"><summary>Datos generales del ensayo <span class="meta-hint">Opcional durante la captura</span></summary><div class="meta-body">${sectionTitle('Identificación del informe')}${testFields(t)}<div class="test-act"><label>Estado del flujo</label><strong>${enc(statusName(t.status))}</strong><p class="hint">Solo se registran las mediciones y los antecedentes del ensayo. La validación pertenece a otro perfil.</p></div></div></details><div class="inline-acts"></div></div></div>`}
 function getTestById(id){return activeOrder().tests.find(t=>t.id===id)}
 function getObject(scope,id){const o=activeOrder(),t=activeTest();if(scope==='order')return o;if(scope==='test')return getTestById(id);if(scope==='control')return t?.controls.find(c=>c.id===id);if(scope==='item')return t?.items.find(it=>it.id===id)}
 function totalPages(){const o=activeOrder();return o.tests.reduce((n,t)=>n+(t.type==='density'?Math.max(1,Math.ceil(t.controls.length/6)):Math.max(1,Math.ceil(t.items.length/12))),0)}
@@ -548,17 +548,45 @@ function reportHeaderSummary(o,t){
  <div class="header-footnote">Información obtenida de la orden y del formulario del laboratorista. En esta vista solo se revisa el contenido.</div>
  </div>`;
 }
+function renderReviewerActions(o,t){
+ const box=$('reviewerActions');if(!box)return;
+ if(!t){box.innerHTML='<p class="empty">Esta orden aún no tiene informes.</p>';return}
+ const issues=reportReadiness(o,t),attrs=' data-oid="'+enc(o.id)+'" data-tid="'+enc(t.id)+'"';
+ let title='',description='',buttons='';
+ if(t.status==='revision'){
+  title='Informe pendiente de validación';
+  description=issues.length?'Completa antes de validar: '+issues.join(', '):'Comprueba la cabecera y todas las mediciones del informe que aparece abajo.';
+  buttons='<button class="btn main" data-action="wf-approve"'+attrs+(issues.length?' disabled':'')+'>✓ Validar documento (DEMO)</button><button class="btn" data-action="wf-observe"'+attrs+'>Devolver con observaciones</button>';
+ }else if(t.status==='revisado'){
+  title='✓ Documento validado · DEMO';
+  description='Revisión registrada. El siguiente paso es la firma visual simulada, no una firma electrónica oficial.';
+  buttons='<button class="btn main" data-action="wf-sign"'+attrs+'>Firmar documento (simulación)</button>';
+ }else if(t.status==='firmado'){
+  title='✓ Documento validado y firma simulada';
+  description='El PDF está listo para descargar mediante «Guardar como PDF». Sigue siendo una demostración sin validez oficial.';
+  buttons='<button class="btn main" data-action="wf-download"'+attrs+'>Descargar PDF</button>';
+ }else if(t.status==='observado'){
+  title='Informe devuelto con observaciones';
+  description=t.reviewNote||'El laboratorista debe corregir los datos y reenviarlos antes de validar.';
+  buttons='<span class="reviewer-waiting">Pendiente de corrección del laboratorista</span>';
+ }else{
+  title='Todavía no enviado a revisión';
+  description='El laboratorista debe terminar de registrar los controles y elegir «Enviar mediciones a revisión».';
+  buttons='<span class="reviewer-waiting">Esperando envío desde Laboratorio</span>';
+ }
+ box.innerHTML='<div class="reviewer-action-card '+(['revisado','firmado'].includes(t.status)?'is-approved':'')+'"><div class="reviewer-action-info"><span class="module-eyebrow">ESTADO DEL INFORME</span><h3>'+enc(title)+'</h3><p>'+enc(description)+'</p></div><div class="reviewer-action-buttons">'+buttons+'</div></div>';
+}
 function renderPreview(onlyId=selectedTestId){
  const o=activeOrder(),t=o.tests.find(x=>x.id===onlyId)||o.tests[0];if(t)selectedTestId=t.id;
  const selector=$('previewTestPicker');
  if(selector)selector.innerHTML='<p class="tiny">Selecciona el informe de esta OT que deseas revisar:</p><div class="preview-selector">'+o.tests.map(x=>'<button class="btn '+(x.id===t?.id?'main':'')+'" data-action="wf-select-preview" data-tid="'+enc(x.id)+'">'+enc(x.title)+'</button>').join('')+'</div>';
- const summaryTarget=$('reportHeaderSummary');if(summaryTarget)summaryTarget.innerHTML=reportHeaderSummary(o,t);
- const send=$('reportSubmitButton');if(send&&t){const locked=['revision','revisado','firma','firmado'].includes(t.status);send.disabled=locked;send.textContent=t.status==='revision'?'Enviado a revisión':(['revisado','firmado'].includes(t.status)?'✓ Documento validado · DEMO':'Enviar a validar →');}
+ const summaryTarget=$('reportHeaderSummary');if(summaryTarget&&t)summaryTarget.innerHTML=reportHeaderSummary(o,t);
+ renderReviewerActions(o,t);
  const pages=buildPages(t?.id||'');$('paperStack').innerHTML=pages.length?pages.join(''):'<div class="empty">Agrega un ensayo para comenzar.</div>';
  $('pageNote').textContent=pages.length+' página(s) A4 · '+(t?.title||'Sin ensayos')+' · Documento de demostración';requestAnimationFrame(fitPaper);
 }
 
-const VIEWS={gestion:'Órdenes de trabajo',ensayos:'Registro de densidad',documento:'Vista del informe',validacion:'Validación',entrega:'Emisión y PDF',orden:'Datos de la OT'};
+const VIEWS={roles:'Elegir perfil',gestion:'Órdenes de trabajo',ensayos:'Registro de densidad',documento:'Vista del informe',validacion:'Validación',entrega:'Emisión y PDF',orden:'Datos de la OT'};
 function toggleDrawer(open){
  document.body.classList.toggle('menu-open',!!open);
  $('menuBackdrop').hidden=!open;
@@ -581,7 +609,7 @@ function navigate(tab){
   if(on)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current');
  });
  $('viewLabel').textContent=VIEWS[tab]||'Controlabs Documents';
- for(const p of ['gestion','orden','ensayos','documento','validacion','entrega','servidor'])$('panel-'+p).classList.toggle('hidden',p!==tab);
+ for(const p of ['roles','gestion','orden','ensayos','documento','validacion','entrega','servidor'])$('panel-'+p).classList.toggle('hidden',p!==tab);
  renderOrderContext();
  if(tab==='gestion')renderManagement();
  if(tab==='orden')renderOrder();
